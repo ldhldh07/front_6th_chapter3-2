@@ -1,7 +1,7 @@
 import { expandEventsToNextOccurrences, getNextDailyOccurrence } from '../../utils/repeatUtils.ts';
 import { getNextWeeklyOccurrence } from '../../utils/repeatUtils.ts';
-import { makeEvent } from '../utils.ts';
 import { getNextYearlyOccurrence } from '../../utils/repeatUtils.ts';
+import { makeEvent } from '../utils.ts';
 
 describe('getNextDailyOccurrence', () => {
   it('기준일보다 같거나 뒤의 첫 daily 발생일을 반환한다', () => {
