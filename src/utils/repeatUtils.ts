@@ -24,6 +24,28 @@ function withNextDate(event: Event, next: Date): Event {
   return { ...event, id: `${event.id}:${nextDateStr}` as unknown as string, date: nextDateStr };
 }
 
+export function addDaysUTC(date: Date, days: number): Date {
+  const next = new Date(date.getTime());
+  next.setUTCDate(next.getUTCDate() + days);
+  return next;
+}
+
+export function buildDailyInstances(
+  event: Event,
+  cursor: Date,
+  stopAt: Date,
+  rangeStart: Date,
+  rangeEnd: Date,
+  acc: Event[]
+): Event[] {
+  if (cursor > stopAt) return acc;
+  const nextAcc =
+    cursor >= rangeStart && cursor <= rangeEnd
+      ? [...acc, { ...event, date: cursor.toISOString().slice(0, 10) }]
+      : acc;
+  return buildDailyInstances(event, addDaysUTC(cursor, 1), stopAt, rangeStart, rangeEnd, nextAcc);
+}
+
 export function getNextDailyOccurrence(base: Date, from: Date, interval: number): Date {
   const safeInterval = Math.max(1, interval);
   if (from <= base) return base;
@@ -114,15 +136,12 @@ export function generateInstances(event: Event, rangeStart: Date, rangeEnd: Date
   const endDate = event.repeat.endDate ? dateStringToUtcDateOnly(event.repeat.endDate) : globalCap;
   const stopAt = endDate < globalCap ? endDate : globalCap;
 
-  const result: Event[] = [];
-  let cursor = dateStringToUtcDateOnly(event.date);
-  while (cursor <= stopAt) {
-    if (cursor >= rangeStart && cursor <= rangeEnd) {
-      result.push({ ...event, date: cursor.toISOString().slice(0, 10) });
-    }
-    const next = new Date(cursor.getTime());
-    next.setUTCDate(next.getUTCDate() + 1);
-    cursor = next;
-  }
-  return result;
+  return buildDailyInstances(
+    event,
+    dateStringToUtcDateOnly(event.date),
+    stopAt,
+    rangeStart,
+    rangeEnd,
+    []
+  );
 }
