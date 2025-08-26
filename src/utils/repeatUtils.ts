@@ -1,11 +1,16 @@
 import type { Event } from '../types';
 
+export const MS_PER_DAY = 1000 * 60 * 60 * 24;
+
+export function toUtcDateOnly(date: Date): Date {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+}
+
 export function getNextDailyOccurrence(base: Date, from: Date, interval: number): Date {
   const safeInterval = Math.max(1, interval);
   if (from <= base) return base;
 
-  const MILLISECONDS_PER_DAY = 1000 * 60 * 60 * 24;
-  const diffDays = Math.ceil((from.getTime() - base.getTime()) / MILLISECONDS_PER_DAY);
+  const diffDays = Math.ceil((from.getTime() - base.getTime()) / MS_PER_DAY);
   const steps = Math.ceil(diffDays / safeInterval);
 
   const next = new Date(base.getTime());
@@ -25,7 +30,6 @@ export function getNextWeeklyOccurrence(base: Date, from: Date, interval: number
     Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate() + daysDiffToSameWeekday)
   );
 
-  const MS_PER_DAY = 1000 * 60 * 60 * 24;
   const weeksBetween = Math.ceil((candidate.getTime() - base.getTime()) / (MS_PER_DAY * 7));
   const remainder = ((weeksBetween % safeInterval) + safeInterval) % safeInterval;
   const addWeeks = remainder === 0 ? 0 : safeInterval - remainder;
@@ -36,7 +40,7 @@ export function getNextWeeklyOccurrence(base: Date, from: Date, interval: number
 }
 
 export function expandEventsToNextOccurrences(events: Event[], now: Date): Event[] {
-  const dateOnly = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const dateOnly = toUtcDateOnly(now);
   return events.map((ev) => {
     if (ev.repeat.type === 'none') return ev;
 
