@@ -106,3 +106,23 @@ export function expandEventsToNextOccurrences(events: Event[], now: Date): Event
     return ev;
   });
 }
+
+export function generateInstances(event: Event, rangeStart: Date, rangeEnd: Date): Event[] {
+  if (event.repeat.type !== 'daily') return [];
+
+  const globalCap = new Date('2025-10-30T00:00:00Z');
+  const endDate = event.repeat.endDate ? dateStringToUtcDateOnly(event.repeat.endDate) : globalCap;
+  const stopAt = endDate < globalCap ? endDate : globalCap;
+
+  const result: Event[] = [];
+  let cursor = dateStringToUtcDateOnly(event.date);
+  while (cursor <= stopAt) {
+    if (cursor >= rangeStart && cursor <= rangeEnd) {
+      result.push({ ...event, date: cursor.toISOString().slice(0, 10) });
+    }
+    const next = new Date(cursor.getTime());
+    next.setUTCDate(next.getUTCDate() + 1);
+    cursor = next;
+  }
+  return result;
+}
