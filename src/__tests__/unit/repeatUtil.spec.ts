@@ -1,6 +1,7 @@
 import { expandEventsToNextOccurrences, getNextDailyOccurrence } from '../../utils/repeatUtils.ts';
 import { getNextWeeklyOccurrence } from '../../utils/repeatUtils.ts';
 import { makeEvent } from '../utils.ts';
+import { getNextYearlyOccurrence } from '../../utils/repeatUtils.ts';
 
 describe('getNextDailyOccurrence', () => {
   it('기준일보다 같거나 뒤의 첫 daily 발생일을 반환한다', () => {
@@ -55,5 +56,14 @@ describe('getNextWeeklyOccurrence', () => {
     const from = new Date('2025-01-06T00:00:00Z');
     const next = getNextWeeklyOccurrence(base, from, 1);
     expect(next.toISOString().slice(0, 10)).toBe('2025-01-08');
+  });
+});
+
+describe('getNextYearlyOccurrence', () => {
+  it('2/29 시작, from=평년 → 다음 윤년 2/29', () => {
+    const base = new Date('2024-02-29T00:00:00Z');
+    const from = new Date('2025-02-28T00:00:00Z');
+    const next = getNextYearlyOccurrence(base, from, 1);
+    expect(next.toISOString().slice(0, 10)).toBe('2028-02-29');
   });
 });

@@ -44,6 +44,10 @@ export function getNextWeeklyOccurrence(base: Date, from: Date, interval: number
   return next;
 }
 
+export function getNextYearlyOccurrence(base: Date, from: Date, interval: number): Date {
+  throw new Error('Not implemented');
+}
+
 export function expandEventsToNextOccurrences(events: Event[], now: Date): Event[] {
   const dateOnly = toUtcDateOnly(now);
   return events.map((ev) => {
