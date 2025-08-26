@@ -6,6 +6,11 @@ export function toUtcDateOnly(date: Date): Date {
   return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
 }
 
+function withNextDate(event: Event, next: Date): Event {
+  const nextDateStr = next.toISOString().slice(0, 10);
+  return { ...event, id: `${event.id}:${nextDateStr}` as unknown as string, date: nextDateStr };
+}
+
 export function getNextDailyOccurrence(base: Date, from: Date, interval: number): Date {
   const safeInterval = Math.max(1, interval);
   if (from <= base) return base;
@@ -47,8 +52,13 @@ export function expandEventsToNextOccurrences(events: Event[], now: Date): Event
     if (ev.repeat.type === 'daily') {
       const base = new Date(ev.date + 'T00:00:00Z');
       const next = getNextDailyOccurrence(base, dateOnly, ev.repeat.interval || 1);
-      const nextDateStr = next.toISOString().slice(0, 10);
-      return { ...ev, id: `${ev.id}:${nextDateStr}` as unknown as string, date: nextDateStr };
+      return withNextDate(ev, next);
+    }
+
+    if (ev.repeat.type === 'weekly') {
+      const base = new Date(ev.date + 'T00:00:00Z');
+      const next = getNextWeeklyOccurrence(base, dateOnly, ev.repeat.interval || 1);
+      return withNextDate(ev, next);
     }
 
     return ev;
