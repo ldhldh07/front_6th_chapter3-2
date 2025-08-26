@@ -30,6 +30,25 @@ describe('expandEventsToNextOccurrences - daily', () => {
   });
 });
 
+describe('expandEventsToNextOccurrences - weekly', () => {
+  it('weekly 이벤트는 다음 동일 요일로 확장되고 id에 날짜가 결합된다', () => {
+    const events = [
+      makeEvent({
+        id: 'e2',
+        title: 'Weekly',
+        date: '2025-01-01',
+        repeat: { type: 'weekly', interval: 1 },
+      }),
+    ];
+
+    const now = new Date('2025-01-06T00:00:00Z'); // 다음 주 월요일
+    const expanded = expandEventsToNextOccurrences(events, now);
+    expect(expanded).toHaveLength(1);
+    expect(expanded[0].date).toBe('2025-01-08'); // 다음 수요일
+    expect(String(expanded[0].id)).toBe('e2:2025-01-08');
+  });
+});
+
 describe('getNextWeeklyOccurrence', () => {
   it('기준일 수요일(2025-01-01), from 다음주 월요일(2025-01-06), 매 1주 → 다음 수요일(2025-01-08)', () => {
     const base = new Date('2025-01-01T00:00:00Z');
