@@ -1,11 +1,18 @@
 import type { Event } from '../types';
 
-// Red: intentionally unimplemented so tests fail
-export function getNextDailyOccurrence(_base: Date, _from: Date, _interval: number): Date {
-  throw new Error('Not implemented');
+export function getNextDailyOccurrence(base: Date, from: Date, interval: number): Date {
+  const safeInterval = Math.max(1, interval);
+  if (from <= base) return base;
+
+  const MILLISECONDS_PER_DAY = 1000 * 60 * 60 * 24;
+  const diffDays = Math.ceil((from.getTime() - base.getTime()) / MILLISECONDS_PER_DAY);
+  const steps = Math.ceil(diffDays / safeInterval);
+
+  const next = new Date(base.getTime());
+  next.setUTCDate(next.getUTCDate() + steps * safeInterval);
+  return next;
 }
 
-// Keep current app behavior unchanged for now
 export function expandEventsToNextOccurrences(events: Event[], _now: Date): Event[] {
   return events;
 }
