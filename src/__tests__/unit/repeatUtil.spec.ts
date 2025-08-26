@@ -1,4 +1,5 @@
 import { expandEventsToNextOccurrences, getNextDailyOccurrence } from '../../utils/repeatUtils.ts';
+import { getNextWeeklyOccurrence } from '../../utils/repeatUtils.ts';
 import { makeEvent } from '../utils.ts';
 
 describe('getNextDailyOccurrence', () => {
@@ -26,5 +27,14 @@ describe('expandEventsToNextOccurrences - daily', () => {
     expect(expanded).toHaveLength(1);
     expect(expanded[0].date).toBe('2025-01-02');
     expect(String(expanded[0].id)).toBe('e1:2025-01-02');
+  });
+});
+
+describe('getNextWeeklyOccurrence', () => {
+  it('기준일 수요일(2025-01-01), from 다음주 월요일(2025-01-06), 매 1주 → 다음 수요일(2025-01-08)', () => {
+    const base = new Date('2025-01-01T00:00:00Z');
+    const from = new Date('2025-01-06T00:00:00Z');
+    const next = getNextWeeklyOccurrence(base, from, 1);
+    expect(next.toISOString().slice(0, 10)).toBe('2025-01-08');
   });
 });

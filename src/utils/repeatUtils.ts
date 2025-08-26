@@ -13,6 +13,10 @@ export function getNextDailyOccurrence(base: Date, from: Date, interval: number)
   return next;
 }
 
+export function getNextWeeklyOccurrence(_base: Date, _from: Date, _interval: number): Date {
+  throw new Error('Not implemented');
+}
+
 export function expandEventsToNextOccurrences(events: Event[], now: Date): Event[] {
   const dateOnly = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
   return events.map((ev) => {
