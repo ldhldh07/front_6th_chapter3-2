@@ -1,6 +1,7 @@
 import type { Event } from '../types';
 
 export const MS_PER_DAY = 1000 * 60 * 60 * 24;
+export const MS_PER_WEEK = MS_PER_DAY * 7;
 
 export function toUtcDateOnly(date: Date): Date {
   return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
@@ -12,6 +13,10 @@ export function isLeapYear(year: number): boolean {
 
 export function getNextLeapYear(year: number): number {
   return isLeapYear(year) ? year : getNextLeapYear(year + 1);
+}
+
+export function dateStringToUtcDateOnly(dateString: string): Date {
+  return new Date(`${dateString}T00:00:00Z`);
 }
 
 function withNextDate(event: Event, next: Date): Event {
@@ -43,7 +48,7 @@ export function getNextWeeklyOccurrence(base: Date, from: Date, interval: number
     Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate() + daysDiffToSameWeekday)
   );
 
-  const weeksBetween = Math.ceil((candidate.getTime() - base.getTime()) / (MS_PER_DAY * 7));
+  const weeksBetween = Math.ceil((candidate.getTime() - base.getTime()) / MS_PER_WEEK);
   const remainder = ((weeksBetween % safeInterval) + safeInterval) % safeInterval;
   const addWeeks = remainder === 0 ? 0 : safeInterval - remainder;
 
@@ -81,19 +86,19 @@ export function expandEventsToNextOccurrences(events: Event[], now: Date): Event
     if (ev.repeat.type === 'none') return ev;
 
     if (ev.repeat.type === 'daily') {
-      const base = new Date(ev.date + 'T00:00:00Z');
+      const base = dateStringToUtcDateOnly(ev.date);
       const next = getNextDailyOccurrence(base, dateOnly, ev.repeat.interval || 1);
       return withNextDate(ev, next);
     }
 
     if (ev.repeat.type === 'weekly') {
-      const base = new Date(ev.date + 'T00:00:00Z');
+      const base = dateStringToUtcDateOnly(ev.date);
       const next = getNextWeeklyOccurrence(base, dateOnly, ev.repeat.interval || 1);
       return withNextDate(ev, next);
     }
 
     if (ev.repeat.type === 'yearly') {
-      const base = new Date(ev.date + 'T00:00:00Z');
+      const base = dateStringToUtcDateOnly(ev.date);
       const next = getNextYearlyOccurrence(base, dateOnly, ev.repeat.interval || 1);
       return withNextDate(ev, next);
     }
