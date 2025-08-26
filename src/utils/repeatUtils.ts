@@ -13,6 +13,18 @@ export function getNextDailyOccurrence(base: Date, from: Date, interval: number)
   return next;
 }
 
-export function expandEventsToNextOccurrences(events: Event[], _now: Date): Event[] {
-  return events;
+export function expandEventsToNextOccurrences(events: Event[], now: Date): Event[] {
+  const dateOnly = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  return events.map((ev) => {
+    if (ev.repeat.type === 'none') return ev;
+
+    if (ev.repeat.type === 'daily') {
+      const base = new Date(ev.date + 'T00:00:00Z');
+      const next = getNextDailyOccurrence(base, dateOnly, ev.repeat.interval || 1);
+      const nextDateStr = next.toISOString().slice(0, 10);
+      return { ...ev, id: `${ev.id}:${nextDateStr}` as unknown as string, date: nextDateStr };
+    }
+
+    return ev;
+  });
 }
