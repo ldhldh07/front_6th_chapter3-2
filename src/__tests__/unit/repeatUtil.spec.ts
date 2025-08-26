@@ -1,6 +1,7 @@
 import { expandEventsToNextOccurrences, getNextDailyOccurrence } from '../../utils/repeatUtils.ts';
 import { getNextWeeklyOccurrence } from '../../utils/repeatUtils.ts';
 import { getNextYearlyOccurrence } from '../../utils/repeatUtils.ts';
+import { generateInstances } from '../../utils/repeatUtils.ts';
 import { makeEvent } from '../utils.ts';
 
 describe('getNextDailyOccurrence', () => {
@@ -84,5 +85,21 @@ describe('expandEventsToNextOccurrences - yearly', () => {
     expect(expanded).toHaveLength(1);
     expect(expanded[0].date).toBe('2028-02-29');
     expect(String(expanded[0].id)).toBe('e3:2028-02-29');
+  });
+});
+
+describe('generateInstances - daily', () => {
+  it('주간 범위 내에서만 daily 인스턴스를 생성한다', () => {
+    const base = makeEvent({
+      id: 'e4',
+      title: 'Daily',
+      date: '2025-01-01',
+      repeat: { type: 'daily', interval: 1, endDate: '2025-01-05' },
+    });
+    const rangeStart = new Date('2025-01-02T00:00:00Z');
+    const rangeEnd = new Date('2025-01-04T00:00:00Z');
+
+    const instances = generateInstances(base, rangeStart, rangeEnd);
+    expect(instances.map((e) => e.date)).toEqual(['2025-01-02', '2025-01-03', '2025-01-04']);
   });
 });
