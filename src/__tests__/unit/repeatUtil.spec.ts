@@ -67,3 +67,22 @@ describe('getNextYearlyOccurrence', () => {
     expect(next.toISOString().slice(0, 10)).toBe('2028-02-29');
   });
 });
+
+describe('expandEventsToNextOccurrences - yearly', () => {
+  it('yearly(2/29) 이벤트는 다음 윤년 2/29로 확장되고 id에 날짜가 결합된다', () => {
+    const events = [
+      makeEvent({
+        id: 'e3',
+        title: 'Yearly',
+        date: '2024-02-29',
+        repeat: { type: 'yearly', interval: 1 },
+      }),
+    ];
+
+    const now = new Date('2025-02-28T00:00:00Z');
+    const expanded = expandEventsToNextOccurrences(events, now);
+    expect(expanded).toHaveLength(1);
+    expect(expanded[0].date).toBe('2028-02-29');
+    expect(String(expanded[0].id)).toBe('e3:2028-02-29');
+  });
+});
