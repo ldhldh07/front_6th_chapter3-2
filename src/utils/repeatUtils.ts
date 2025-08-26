@@ -92,6 +92,12 @@ export function expandEventsToNextOccurrences(events: Event[], now: Date): Event
       return withNextDate(ev, next);
     }
 
+    if (ev.repeat.type === 'yearly') {
+      const base = new Date(ev.date + 'T00:00:00Z');
+      const next = getNextYearlyOccurrence(base, dateOnly, ev.repeat.interval || 1);
+      return withNextDate(ev, next);
+    }
+
     return ev;
   });
 }
