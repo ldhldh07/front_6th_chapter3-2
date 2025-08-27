@@ -154,3 +154,20 @@ describe('generateInstances - yearly (2/29)', () => {
     expect(instances.map((e) => e.date)).toEqual(['2024-02-29']);
   });
 });
+
+describe('generateInstances - cap', () => {
+  it('글로벌 상한 2025-10-30을 넘어서는 인스턴스는 생성되지 않는다', () => {
+    const base = makeEvent({
+      id: 'cap1',
+      title: 'Cap',
+      date: '2025-10-29',
+      repeat: { type: 'daily', interval: 1, endDate: '2026-01-10' },
+    });
+
+    const rangeStart = new Date('2025-10-29T00:00:00Z');
+    const rangeEnd = new Date('2025-11-05T00:00:00Z');
+
+    const instances = generateInstances(base, rangeStart, rangeEnd);
+    expect(instances.map((e) => e.date)).toEqual(['2025-10-29', '2025-10-30']);
+  });
+});
