@@ -16,6 +16,10 @@ export function toUtcDateOnly(date: Date): Date {
   return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
 }
 
+function toDateStringUTC(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
 export function isLeapYear(year: number): boolean {
   return year % 400 === 0 || (year % 4 === 0 && year % 100 !== 0);
 }
@@ -29,7 +33,7 @@ export function dateStringToUtcDateOnly(dateString: string): Date {
 }
 
 function withNextDate(event: Event, next: Date): Event {
-  const nextDateStr = next.toISOString().slice(0, 10);
+  const nextDateStr = toDateStringUTC(next);
   return { ...event, id: `${event.id}:${nextDateStr}`, date: nextDateStr };
 }
 
@@ -47,7 +51,7 @@ function appendIfInRange(
   acc: Event[]
 ): Event[] {
   if (cursor >= rangeStart && cursor <= rangeEnd) {
-    return [...acc, { ...event, date: cursor.toISOString().slice(0, 10) }];
+    return [...acc, { ...event, date: toDateStringUTC(cursor) }];
   }
   return acc;
 }
