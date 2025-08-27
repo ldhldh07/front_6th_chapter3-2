@@ -1,6 +1,6 @@
 import CssBaseline from '@mui/material/CssBaseline';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { render, screen, within, act } from '@testing-library/react';
+import { render, screen, within, act, waitFor } from '@testing-library/react';
 import { UserEvent, userEvent } from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { SnackbarProvider } from 'notistack';
@@ -379,5 +379,31 @@ describe('반복 UI 및 표시', () => {
 
     const eventList = within(screen.getByTestId('event-list'));
     expect(eventList.getByLabelText('반복 일정 아이콘')).toBeInTheDocument();
+  });
+
+  it('반복 일정을 단일 수정으로 저장하면 반복 아이콘이 사라진다', async () => {
+    setupMockHandlerUpdating();
+
+    const { user } = setup(<App />);
+
+    // 먼저 기존 이벤트를 반복 이벤트로 변경하여 아이콘이 보이도록 만든다
+    await user.click((await screen.findAllByLabelText('Edit event'))[0]);
+    const repeatToggle = await screen.findByLabelText('반복 일정');
+    await user.click(repeatToggle);
+    await user.click(await screen.findByRole('combobox', { name: '반복 유형' }));
+    await user.click(screen.getByRole('option', { name: '매주' }));
+    await user.click(screen.getByTestId('event-submit-button'));
+
+    const list = within(screen.getByTestId('event-list'));
+    expect(await list.findByLabelText('반복 일정 아이콘')).toBeInTheDocument();
+
+    await user.click((await screen.findAllByLabelText('Edit event'))[0]);
+    const repeatToggle2 = await screen.findByLabelText('반복 일정');
+    await user.click(repeatToggle2); // 체크 해제
+    await user.click(screen.getByTestId('event-submit-button'));
+
+    await waitFor(() => {
+      expect(list.queryByLabelText('반복 일정 아이콘')).not.toBeInTheDocument();
+    });
   });
 });
