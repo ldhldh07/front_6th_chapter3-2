@@ -120,3 +120,20 @@ describe('generateInstances - weekly', () => {
     expect(instances.map((e) => e.date)).toEqual(['2025-01-08', '2025-01-15']);
   });
 });
+
+describe('generateInstances - monthly', () => {
+  it('31일 시작 monthly는 31일이 없는 달(Feb)을 건너뛰고 3월 31일만 생성한다', () => {
+    const base = makeEvent({
+      id: 'e6',
+      title: 'Monthly-31',
+      date: '2025-01-31',
+      repeat: { type: 'monthly', interval: 1, endDate: '2025-03-31' },
+    });
+
+    const rangeStart = new Date('2025-02-01T00:00:00Z');
+    const rangeEnd = new Date('2025-03-31T00:00:00Z');
+
+    const instances = generateInstances(base, rangeStart, rangeEnd);
+    expect(instances.map((e) => e.date)).toEqual(['2025-03-31']);
+  });
+});
