@@ -136,6 +136,21 @@ describe('generateInstances - monthly', () => {
     const instances = generateInstances(base, rangeStart, rangeEnd);
     expect(instances.map((e) => e.date)).toEqual(['2025-03-31']);
   });
+
+  it('월간 범위(3월) 내에서 monthly 인스턴스(3/31)만 생성된다', () => {
+    const base = makeEvent({
+      id: 'e6b',
+      title: 'Monthly-31',
+      date: '2025-01-31',
+      repeat: { type: 'monthly', interval: 1, endDate: '2025-03-31' },
+    });
+
+    const rangeStart = new Date('2025-03-01T00:00:00Z');
+    const rangeEnd = new Date('2025-03-31T00:00:00Z');
+
+    const instances = generateInstances(base, rangeStart, rangeEnd);
+    expect(instances.map((e) => e.date)).toEqual(['2025-03-31']);
+  });
 });
 
 describe('generateInstances - yearly (2/29)', () => {
