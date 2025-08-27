@@ -348,7 +348,7 @@ describe('반복 UI 및 표시', () => {
     const repeatToggle = await screen.findByLabelText('반복 일정');
     await user.click(repeatToggle);
 
-    expect(screen.getByText('반복 유형')).toBeInTheDocument();
-    expect(screen.getByText('반복 종료일')).toBeInTheDocument();
+    expect(await screen.findByRole('combobox', { name: '반복 유형' })).toBeInTheDocument();
+    expect(screen.getByLabelText('반복 종료일')).toBeInTheDocument();
   });
 });
