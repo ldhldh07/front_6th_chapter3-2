@@ -169,6 +169,23 @@ function getMonthIndex(year: number, monthZeroBased: number): number {
   return year * 12 + monthZeroBased;
 }
 
+function findNextMonthlyOccurrenceFromIndex(
+  startIdx: number,
+  baseIdx: number,
+  safeInterval: number,
+  targetDay: number,
+  from: Date
+): Date {
+  const year = Math.floor(startIdx / 12);
+  const month = startIdx % 12;
+  const dim = daysInMonthUTC(year, month);
+  const hasTarget = targetDay <= dim;
+  const candidate = hasTarget ? new Date(Date.UTC(year, month, targetDay)) : undefined;
+  const isAligned = (startIdx - baseIdx) % safeInterval === 0;
+  if (candidate && candidate >= from && isAligned) return candidate;
+  return findNextMonthlyOccurrenceFromIndex(startIdx + 1, baseIdx, safeInterval, targetDay, from);
+}
+
 function getDateAtMonthIndexOrNextWithDay(idx: number, requiredDay: number): Date {
   const year = Math.floor(idx / 12);
   const month = idx % 12;
@@ -217,18 +234,7 @@ export function getNextMonthlyOccurrence(base: Date, from: Date, interval: numbe
   const baseIdx = getMonthIndex(base.getUTCFullYear(), base.getUTCMonth());
   const startIdx = getMonthIndex(from.getUTCFullYear(), from.getUTCMonth());
 
-  function find(idx: number): Date {
-    const year = Math.floor(idx / 12);
-    const month = idx % 12;
-    const dim = daysInMonthUTC(year, month);
-    const hasTarget = targetDay <= dim;
-    const candidate = hasTarget ? new Date(Date.UTC(year, month, targetDay)) : undefined;
-    const isAligned = (idx - baseIdx) % safeInterval === 0;
-    if (candidate && candidate >= from && isAligned) return candidate;
-    return find(idx + 1);
-  }
-
-  return find(startIdx);
+  return findNextMonthlyOccurrenceFromIndex(startIdx, baseIdx, safeInterval, targetDay, from);
 }
 
 export function generateInstances(event: Event, rangeStart: Date, rangeEnd: Date): Event[] {
