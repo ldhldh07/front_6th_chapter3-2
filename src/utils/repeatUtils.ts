@@ -46,6 +46,31 @@ export function buildDailyInstances(
   return buildDailyInstances(event, addDaysUTC(cursor, 1), stopAt, rangeStart, rangeEnd, nextAcc);
 }
 
+export function buildWeeklyInstances(
+  event: Event,
+  cursor: Date,
+  stopAt: Date,
+  rangeStart: Date,
+  rangeEnd: Date,
+  interval: number,
+  acc: Event[]
+): Event[] {
+  if (cursor > stopAt || cursor > rangeEnd) return acc;
+  const nextAcc =
+    cursor >= rangeStart && cursor <= rangeEnd
+      ? [...acc, { ...event, date: cursor.toISOString().slice(0, 10) }]
+      : acc;
+  return buildWeeklyInstances(
+    event,
+    addDaysUTC(cursor, 7 * Math.max(1, interval)),
+    stopAt,
+    rangeStart,
+    rangeEnd,
+    interval,
+    nextAcc
+  );
+}
+
 export function getNextDailyOccurrence(base: Date, from: Date, interval: number): Date {
   const safeInterval = Math.max(1, interval);
   if (from <= base) return base;
@@ -130,18 +155,27 @@ export function expandEventsToNextOccurrences(events: Event[], now: Date): Event
 }
 
 export function generateInstances(event: Event, rangeStart: Date, rangeEnd: Date): Event[] {
-  if (event.repeat.type !== 'daily') return [];
-
   const globalCap = new Date('2025-10-30T00:00:00Z');
   const endDate = event.repeat.endDate ? dateStringToUtcDateOnly(event.repeat.endDate) : globalCap;
   const stopAt = endDate < globalCap ? endDate : globalCap;
 
-  return buildDailyInstances(
-    event,
-    dateStringToUtcDateOnly(event.date),
-    stopAt,
-    rangeStart,
-    rangeEnd,
-    []
-  );
+  if (event.repeat.type === 'daily') {
+    return buildDailyInstances(
+      event,
+      dateStringToUtcDateOnly(event.date),
+      stopAt,
+      rangeStart,
+      rangeEnd,
+      []
+    );
+  }
+
+  if (event.repeat.type === 'weekly') {
+    const base = dateStringToUtcDateOnly(event.date);
+    const safeInterval = Math.max(1, event.repeat.interval || 1);
+    const first = getNextWeeklyOccurrence(base, rangeStart, safeInterval);
+    return buildWeeklyInstances(event, first, stopAt, rangeStart, rangeEnd, safeInterval, []);
+  }
+
+  return [];
 }
