@@ -103,3 +103,20 @@ describe('generateInstances - daily', () => {
     expect(instances.map((e) => e.date)).toEqual(['2025-01-02', '2025-01-03', '2025-01-04']);
   });
 });
+
+describe('generateInstances - weekly', () => {
+  it('주간 범위 내에서만 weekly(같은 요일) 인스턴스를 생성한다', () => {
+    const base = makeEvent({
+      id: 'e5',
+      title: 'Weekly',
+      date: '2025-01-01', // 수요일
+      repeat: { type: 'weekly', interval: 1, endDate: '2025-01-30' },
+    });
+
+    const rangeStart = new Date('2025-01-05T00:00:00Z');
+    const rangeEnd = new Date('2025-01-20T00:00:00Z');
+
+    const instances = generateInstances(base, rangeStart, rangeEnd);
+    expect(instances.map((e) => e.date)).toEqual(['2025-01-08', '2025-01-15']);
+  });
+});
