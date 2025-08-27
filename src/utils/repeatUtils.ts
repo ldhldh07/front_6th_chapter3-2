@@ -2,6 +2,15 @@ import type { Event } from '../types';
 
 export const MS_PER_DAY = 1000 * 60 * 60 * 24;
 export const MS_PER_WEEK = MS_PER_DAY * 7;
+export const GLOBAL_REPEAT_CAP = new Date('2025-10-30T00:00:00Z');
+
+export function getSafeInterval(interval?: number): number {
+  return Math.max(1, interval ?? 1);
+}
+
+export function clampEndDate(endDate: Date | undefined, cap: Date): Date {
+  return endDate && endDate < cap ? endDate : cap;
+}
 
 export function toUtcDateOnly(date: Date): Date {
   return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
@@ -21,7 +30,7 @@ export function dateStringToUtcDateOnly(dateString: string): Date {
 
 function withNextDate(event: Event, next: Date): Event {
   const nextDateStr = next.toISOString().slice(0, 10);
-  return { ...event, id: `${event.id}:${nextDateStr}` as unknown as string, date: nextDateStr };
+  return { ...event, id: `${event.id}:${nextDateStr}`, date: nextDateStr };
 }
 
 export function addDaysUTC(date: Date, days: number): Date {
@@ -51,7 +60,7 @@ export function buildDailyInstances(
   rangeEnd: Date,
   acc: Event[]
 ): Event[] {
-  if (cursor > stopAt) return acc;
+  if (cursor > stopAt || cursor > rangeEnd) return acc;
   const nextAcc = appendIfInRange(event, cursor, rangeStart, rangeEnd, acc);
   return buildDailyInstances(event, addDaysUTC(cursor, 1), stopAt, rangeStart, rangeEnd, nextAcc);
 }
@@ -79,7 +88,7 @@ export function buildWeeklyInstances(
 }
 
 export function getNextDailyOccurrence(base: Date, from: Date, interval: number): Date {
-  const safeInterval = Math.max(1, interval);
+  const safeInterval = getSafeInterval(interval);
   if (from <= base) return base;
 
   const diffDays = Math.ceil((from.getTime() - base.getTime()) / MS_PER_DAY);
@@ -91,7 +100,7 @@ export function getNextDailyOccurrence(base: Date, from: Date, interval: number)
 }
 
 export function getNextWeeklyOccurrence(base: Date, from: Date, interval: number): Date {
-  const safeInterval = Math.max(1, interval);
+  const safeInterval = getSafeInterval(interval);
   if (from <= base) return base;
 
   const baseWeekday = base.getUTCDay();
@@ -112,7 +121,7 @@ export function getNextWeeklyOccurrence(base: Date, from: Date, interval: number
 }
 
 export function getNextYearlyOccurrence(base: Date, from: Date, interval: number): Date {
-  const safeInterval = Math.max(1, interval);
+  const safeInterval = getSafeInterval(interval);
   if (from <= base) return base;
 
   const targetMonth = base.getUTCMonth();
@@ -243,7 +252,7 @@ function buildMonthlyInstances(
 }
 
 export function getNextMonthlyOccurrence(base: Date, from: Date, interval: number): Date {
-  const safeInterval = Math.max(1, interval);
+  const safeInterval = getSafeInterval(interval);
   if (from <= base) return base;
 
   const targetDay = base.getUTCDate();
@@ -254,9 +263,8 @@ export function getNextMonthlyOccurrence(base: Date, from: Date, interval: numbe
 }
 
 export function generateInstances(event: Event, rangeStart: Date, rangeEnd: Date): Event[] {
-  const globalCap = new Date('2025-10-30T00:00:00Z');
-  const endDate = event.repeat.endDate ? dateStringToUtcDateOnly(event.repeat.endDate) : globalCap;
-  const stopAt = endDate < globalCap ? endDate : globalCap;
+  const endDate = event.repeat.endDate ? dateStringToUtcDateOnly(event.repeat.endDate) : undefined;
+  const stopAt = clampEndDate(endDate, GLOBAL_REPEAT_CAP);
 
   if (event.repeat.type === 'daily') {
     return buildDailyInstances(
@@ -271,14 +279,14 @@ export function generateInstances(event: Event, rangeStart: Date, rangeEnd: Date
 
   if (event.repeat.type === 'weekly') {
     const base = dateStringToUtcDateOnly(event.date);
-    const safeInterval = Math.max(1, event.repeat.interval || 1);
+    const safeInterval = getSafeInterval(event.repeat.interval);
     const first = getNextWeeklyOccurrence(base, rangeStart, safeInterval);
     return buildWeeklyInstances(event, first, stopAt, rangeStart, rangeEnd, safeInterval, []);
   }
 
   if (event.repeat.type === 'monthly') {
     const base = dateStringToUtcDateOnly(event.date);
-    const safeInterval = Math.max(1, event.repeat.interval || 1);
+    const safeInterval = getSafeInterval(event.repeat.interval);
     const first = getNextMonthlyOccurrence(base, rangeStart, safeInterval);
     const requiredDay = base.getUTCDate();
     return buildMonthlyInstances(
@@ -295,7 +303,7 @@ export function generateInstances(event: Event, rangeStart: Date, rangeEnd: Date
 
   if (event.repeat.type === 'yearly') {
     const base = dateStringToUtcDateOnly(event.date);
-    const safeInterval = Math.max(1, event.repeat.interval || 1);
+    const safeInterval = getSafeInterval(event.repeat.interval);
     const first = getNextYearlyOccurrence(base, rangeStart, safeInterval);
     return buildYearlyInstances(event, base, first, stopAt, rangeStart, rangeEnd, safeInterval, []);
   }
