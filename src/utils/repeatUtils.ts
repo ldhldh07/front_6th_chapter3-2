@@ -30,6 +30,19 @@ export function addDaysUTC(date: Date, days: number): Date {
   return next;
 }
 
+function appendIfInRange(
+  event: Event,
+  cursor: Date,
+  rangeStart: Date,
+  rangeEnd: Date,
+  acc: Event[]
+): Event[] {
+  if (cursor >= rangeStart && cursor <= rangeEnd) {
+    return [...acc, { ...event, date: cursor.toISOString().slice(0, 10) }];
+  }
+  return acc;
+}
+
 export function buildDailyInstances(
   event: Event,
   cursor: Date,
@@ -39,10 +52,7 @@ export function buildDailyInstances(
   acc: Event[]
 ): Event[] {
   if (cursor > stopAt) return acc;
-  const nextAcc =
-    cursor >= rangeStart && cursor <= rangeEnd
-      ? [...acc, { ...event, date: cursor.toISOString().slice(0, 10) }]
-      : acc;
+  const nextAcc = appendIfInRange(event, cursor, rangeStart, rangeEnd, acc);
   return buildDailyInstances(event, addDaysUTC(cursor, 1), stopAt, rangeStart, rangeEnd, nextAcc);
 }
 
@@ -56,10 +66,7 @@ export function buildWeeklyInstances(
   acc: Event[]
 ): Event[] {
   if (cursor > stopAt || cursor > rangeEnd) return acc;
-  const nextAcc =
-    cursor >= rangeStart && cursor <= rangeEnd
-      ? [...acc, { ...event, date: cursor.toISOString().slice(0, 10) }]
-      : acc;
+  const nextAcc = appendIfInRange(event, cursor, rangeStart, rangeEnd, acc);
   return buildWeeklyInstances(
     event,
     addDaysUTC(cursor, 7 * Math.max(1, interval)),
