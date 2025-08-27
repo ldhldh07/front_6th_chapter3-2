@@ -137,3 +137,20 @@ describe('generateInstances - monthly', () => {
     expect(instances.map((e) => e.date)).toEqual(['2025-03-31']);
   });
 });
+
+describe('generateInstances - yearly (2/29)', () => {
+  it('2/29 시작 yearly는 윤년에만 인스턴스를 생성한다(상한 내에서는 2024만 포함)', () => {
+    const base = makeEvent({
+      id: 'e7',
+      title: 'Yearly-229',
+      date: '2024-02-29',
+      repeat: { type: 'yearly', interval: 1, endDate: '2029-12-31' },
+    });
+
+    const rangeStart = new Date('2023-01-01T00:00:00Z');
+    const rangeEnd = new Date('2025-10-30T00:00:00Z');
+
+    const instances = generateInstances(base, rangeStart, rangeEnd);
+    expect(instances.map((e) => e.date)).toEqual(['2024-02-29']);
+  });
+});
