@@ -201,6 +201,22 @@ function addMonthsUntilHasDay(date: Date, monthsToAdd: number, requiredDay: numb
   return getDateAtMonthIndexOrNextWithDay(idx, requiredDay);
 }
 
+function buildYearlyInstances(
+  event: Event,
+  base: Date,
+  cursor: Date,
+  stopAt: Date,
+  rangeStart: Date,
+  rangeEnd: Date,
+  interval: number,
+  acc: Event[]
+): Event[] {
+  if (cursor > stopAt || cursor > rangeEnd) return acc;
+  const nextAcc = appendIfInRange(event, cursor, rangeStart, rangeEnd, acc);
+  const next = getNextYearlyOccurrence(base, addDaysUTC(cursor, 1), Math.max(1, interval));
+  return buildYearlyInstances(event, base, next, stopAt, rangeStart, rangeEnd, interval, nextAcc);
+}
+
 function buildMonthlyInstances(
   event: Event,
   cursor: Date,
@@ -275,6 +291,13 @@ export function generateInstances(event: Event, rangeStart: Date, rangeEnd: Date
       requiredDay,
       []
     );
+  }
+
+  if (event.repeat.type === 'yearly') {
+    const base = dateStringToUtcDateOnly(event.date);
+    const safeInterval = Math.max(1, event.repeat.interval || 1);
+    const first = getNextYearlyOccurrence(base, rangeStart, safeInterval);
+    return buildYearlyInstances(event, base, first, stopAt, rangeStart, rangeEnd, safeInterval, []);
   }
 
   return [];
