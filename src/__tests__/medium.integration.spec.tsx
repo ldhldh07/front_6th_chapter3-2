@@ -340,3 +340,15 @@ it('notificationTime을 10으로 하면 지정 시간 10분 전 알람 텍스트
 
   expect(screen.getByText('10분 후 기존 회의 일정이 시작됩니다.')).toBeInTheDocument();
 });
+
+describe('반복 UI 및 표시', () => {
+  it('반복 일정 체크 시 반복 유형/종료일 입력 UI가 노출된다', async () => {
+    const { user } = setup(<App />);
+
+    const repeatToggle = await screen.findByLabelText('반복 일정');
+    await user.click(repeatToggle);
+
+    expect(screen.getByText('반복 유형')).toBeInTheDocument();
+    expect(screen.getByText('반복 종료일')).toBeInTheDocument();
+  });
+});
