@@ -161,6 +161,36 @@ export function expandEventsToNextOccurrences(events: Event[], now: Date): Event
   });
 }
 
+function daysInMonthUTC(year: number, monthZeroBased: number): number {
+  return new Date(Date.UTC(year, monthZeroBased + 1, 0)).getUTCDate();
+}
+
+function getMonthIndex(year: number, monthZeroBased: number): number {
+  return year * 12 + monthZeroBased;
+}
+
+export function getNextMonthlyOccurrence(base: Date, from: Date, interval: number): Date {
+  const safeInterval = Math.max(1, interval);
+  if (from <= base) return base;
+
+  const targetDay = base.getUTCDate();
+  const baseIdx = getMonthIndex(base.getUTCFullYear(), base.getUTCMonth());
+  const startIdx = getMonthIndex(from.getUTCFullYear(), from.getUTCMonth());
+
+  function tryIndex(idx: number): Date {
+    const year = Math.floor(idx / 12);
+    const month = idx % 12;
+    const dim = daysInMonthUTC(year, month);
+    const hasTarget = targetDay <= dim;
+    const candidate = hasTarget ? new Date(Date.UTC(year, month, targetDay)) : undefined;
+    const isAligned = (idx - baseIdx) % safeInterval === 0;
+    if (candidate && candidate >= from && isAligned) return candidate;
+    return tryIndex(idx + 1);
+  }
+
+  return tryIndex(startIdx);
+}
+
 export function generateInstances(event: Event, rangeStart: Date, rangeEnd: Date): Event[] {
   const globalCap = new Date('2025-10-30T00:00:00Z');
   const endDate = event.repeat.endDate ? dateStringToUtcDateOnly(event.repeat.endDate) : globalCap;
@@ -182,6 +212,35 @@ export function generateInstances(event: Event, rangeStart: Date, rangeEnd: Date
     const safeInterval = Math.max(1, event.repeat.interval || 1);
     const first = getNextWeeklyOccurrence(base, rangeStart, safeInterval);
     return buildWeeklyInstances(event, first, stopAt, rangeStart, rangeEnd, safeInterval, []);
+  }
+
+  if (event.repeat.type === 'monthly') {
+    const base = dateStringToUtcDateOnly(event.date);
+    const safeInterval = Math.max(1, event.repeat.interval || 1);
+    const first = getNextMonthlyOccurrence(base, rangeStart, safeInterval);
+
+    function advanceMonth(date: Date, months: number): Date {
+      const year = date.getUTCFullYear();
+      const month = date.getUTCMonth();
+      const day = date.getUTCDate();
+      const idx = year * 12 + month + months;
+      const nextYear = Math.floor(idx / 12);
+      const nextMonth = idx % 12;
+      const dim = daysInMonthUTC(nextYear, nextMonth);
+      if (day > dim) {
+        return advanceMonth(new Date(Date.UTC(nextYear, nextMonth, dim)), safeInterval);
+      }
+      return new Date(Date.UTC(nextYear, nextMonth, day));
+    }
+
+    function loopMonthly(cursor: Date, acc: Event[]): Event[] {
+      if (cursor > stopAt || cursor > rangeEnd) return acc;
+      const nextAcc = appendIfInRange(event, cursor, rangeStart, rangeEnd, acc);
+      const next = advanceMonth(cursor, safeInterval);
+      return loopMonthly(next, nextAcc);
+    }
+
+    return loopMonthly(first, []);
   }
 
   return [];
