@@ -602,8 +602,11 @@ function App() {
                     <IconButton aria-label="Edit event" onClick={() => editEvent(event)}>
                       <Edit />
                     </IconButton>
-                    <IconButton aria-label="Delete event" onClick={() => deleteEvent(event.id)}>
-                      <Delete />
+                    <IconButton
+                      aria-label={`Delete event ${event.date}`}
+                      onClick={() => deleteEvent(event.id)}
+                    >
+                      <Delete data-testid="DeleteIcon" aria-hidden={false} role="img" />
                     </IconButton>
                   </Stack>
                 </Stack>

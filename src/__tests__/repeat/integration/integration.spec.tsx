@@ -2,14 +2,19 @@ import { CssBaseline } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { screen, within, waitFor, render } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
+import { http, HttpResponse } from 'msw';
 import { SnackbarProvider } from 'notistack';
 import { ReactElement } from 'react';
 
+import { handlers } from '../../../__mocks__/handlers';
 import {
   setupMockHandlerCreation,
   setupMockHandlerUpdating,
 } from '../../../__mocks__/handlersUtils';
+import { setupMockHandlerDeletion } from '../../../__mocks__/handlersUtils';
 import App from '../../../App';
+import { server } from '../../../setupTests';
+import { makeEvent } from '../../utils';
 
 const theme = createTheme();
 
@@ -97,6 +102,59 @@ describe('반복 UI 및 표시', () => {
 
     await waitFor(() => {
       expect(weekView.queryByLabelText('반복 일정 아이콘')).not.toBeInTheDocument();
+    });
+  });
+
+  it('반복일정을 단일 삭제하면 해당 날짜 셀에서만 사라진다', async () => {
+    // 현재 주간 뷰 범위에 10/16, 10/17이 포함되도록 고정
+    vi.setSystemTime(new Date('2025-10-16'));
+
+    // 반복: daily 10/15 시작 ~ 10/22 종료, 서버에는 베이스 이벤트 1건만 존재
+    const series = makeEvent({
+      id: 'r1',
+      title: '반복 삭제 테스트',
+      date: '2025-10-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1, endDate: '2025-10-22' },
+    });
+
+    setupMockHandlerCreation([series]);
+
+    const { user } = setup(<App />);
+
+    await user.click(within(screen.getByLabelText('뷰 타입 선택')).getByRole('combobox'));
+    await user.click(screen.getByRole('option', { name: 'month-option' }));
+    const monthView = within(screen.getByTestId('month-view'));
+
+    const day16Cell = within(monthView.getByText('16').closest('td')!);
+    await waitFor(() => expect(day16Cell.getByText('반복 삭제 테스트')).toBeInTheDocument());
+
+    const day17Cell = within(monthView.getByText('17').closest('td')!);
+    await waitFor(() => expect(day17Cell.getByText('반복 삭제 테스트')).toBeInTheDocument());
+
+    let mockEvents = [series];
+
+    server.use(
+      http.get('/api/events', () => {
+        return HttpResponse.json({ events: mockEvents });
+      }),
+      http.delete('/api/events/:id', ({ params }) => {
+        const { id } = params;
+        mockEvents = mockEvents.filter((event) => event.id !== id);
+        return new HttpResponse(null, { status: 204 });
+      })
+    );
+
+    const deleteBtn = screen.getByRole('button', {
+      name: 'Delete event 2025-10-16',
+    });
+    await user.click(deleteBtn);
+
+    await waitFor(() => {
+      expect(day16Cell.queryByText('반복 삭제 테스트')).not.toBeInTheDocument();
+      expect(day17Cell.getByText('반복 삭제 테스트')).toBeInTheDocument();
     });
   });
 });
