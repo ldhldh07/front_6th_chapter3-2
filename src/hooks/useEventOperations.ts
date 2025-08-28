@@ -55,10 +55,37 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
 
   const deleteEvent = async (id: string) => {
     try {
-      const response = await fetch(`/api/events/${id}`, { method: 'DELETE' });
+      const isInstanceId = id.includes('_') && id.match(/_\d{4}-\d{2}-\d{2}$/);
 
-      if (!response.ok) {
-        throw new Error('Failed to delete event');
+      if (isInstanceId) {
+        const [baseId, dateToExclude] = id.split('_');
+        const baseEvent = events.find((event) => event.id === baseId);
+
+        if (baseEvent && baseEvent.repeat.type !== 'none') {
+          const updatedEvent = {
+            ...baseEvent,
+            repeat: {
+              ...baseEvent.repeat,
+              excludedDates: [...(baseEvent.repeat.excludedDates || []), dateToExclude],
+            },
+          };
+
+          const response = await fetch(`/api/events/${baseId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updatedEvent),
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to exclude event instance');
+          }
+        }
+      } else {
+        const response = await fetch(`/api/events/${id}`, { method: 'DELETE' });
+
+        if (!response.ok) {
+          throw new Error('Failed to delete event');
+        }
       }
 
       await fetchEvents();

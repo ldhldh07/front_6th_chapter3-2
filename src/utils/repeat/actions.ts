@@ -24,8 +24,15 @@ function appendIfInRange(
   rangeEnd: Date,
   acc: Event[]
 ): Event[] {
+  const dateString = toDateStringUTC(cursor);
+
+  if (event.repeat.excludedDates?.includes(dateString)) {
+    return acc;
+  }
+
   if (cursor >= rangeStart && cursor <= rangeEnd) {
-    return [...acc, { ...event, date: toDateStringUTC(cursor) }];
+    const instanceId = dateString === event.date ? event.id : `${event.id}_${dateString}`;
+    return [...acc, { ...event, date: dateString, id: instanceId }];
   }
   return acc;
 }

@@ -6,14 +6,13 @@ import { http, HttpResponse } from 'msw';
 import { SnackbarProvider } from 'notistack';
 import { ReactElement } from 'react';
 
-import { handlers } from '../../../__mocks__/handlers';
 import {
   setupMockHandlerCreation,
   setupMockHandlerUpdating,
 } from '../../../__mocks__/handlersUtils';
-import { setupMockHandlerDeletion } from '../../../__mocks__/handlersUtils';
 import App from '../../../App';
 import { server } from '../../../setupTests';
+import { Event } from '../../../types';
 import { makeEvent } from '../../utils';
 
 const theme = createTheme();
@@ -106,10 +105,8 @@ describe('반복 UI 및 표시', () => {
   });
 
   it('반복일정을 단일 삭제하면 해당 날짜 셀에서만 사라진다', async () => {
-    // 현재 주간 뷰 범위에 10/16, 10/17이 포함되도록 고정
     vi.setSystemTime(new Date('2025-10-16'));
 
-    // 반복: daily 10/15 시작 ~ 10/22 종료, 서버에는 베이스 이벤트 1건만 존재
     const series = makeEvent({
       id: 'r1',
       title: '반복 삭제 테스트',
@@ -139,6 +136,16 @@ describe('반복 UI 및 표시', () => {
     server.use(
       http.get('/api/events', () => {
         return HttpResponse.json({ events: mockEvents });
+      }),
+      http.put('/api/events/:id', async ({ params, request }) => {
+        const { id } = params;
+        const updatedEvent = (await request.json()) as Event;
+
+        const index = mockEvents.findIndex((event) => event.id === id);
+        if (index !== -1) {
+          mockEvents[index] = { ...mockEvents[index], ...updatedEvent };
+        }
+        return HttpResponse.json(mockEvents[index]);
       }),
       http.delete('/api/events/:id', ({ params }) => {
         const { id } = params;

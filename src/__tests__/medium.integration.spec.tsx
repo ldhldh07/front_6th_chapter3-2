@@ -106,7 +106,7 @@ describe('일정 CRUD 및 기본 기능', () => {
     expect(await eventList.findByText('삭제할 이벤트')).toBeInTheDocument();
 
     // 삭제 버튼 클릭
-    const allDeleteButton = await screen.findAllByLabelText('Delete event');
+    const allDeleteButton = await screen.findAllByTestId('DeleteIcon');
     await user.click(allDeleteButton[0]);
 
     expect(eventList.queryByText('삭제할 이벤트')).not.toBeInTheDocument();
