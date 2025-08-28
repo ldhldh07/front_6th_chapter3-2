@@ -1,6 +1,6 @@
 import { Event } from '../types';
 import { getWeekDates, isDateInRange } from './dateUtils';
-import { generateInstances } from './repeatUtils';
+import { generateInstances } from './repeat/actions';
 
 function filterEventsByDateRange(events: Event[], start: Date, end: Date): Event[] {
   return events.filter((event) => {
