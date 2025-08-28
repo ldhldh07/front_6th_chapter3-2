@@ -208,6 +208,9 @@ function App() {
                           >
                             <Stack direction="row" spacing={1} alignItems="center">
                               {isNotified && <Notifications fontSize="small" />}
+                              {event.repeat.type !== 'none' && (
+                                <Autorenew fontSize="small" aria-label="반복 일정 아이콘" />
+                              )}
                               <Typography
                                 variant="caption"
                                 noWrap
@@ -295,6 +298,9 @@ function App() {
                                 >
                                   <Stack direction="row" spacing={1} alignItems="center">
                                     {isNotified && <Notifications fontSize="small" />}
+                                    {event.repeat.type !== 'none' && (
+                                      <Autorenew fontSize="small" aria-label="반복 일정 아이콘" />
+                                    )}
                                     <Typography
                                       variant="caption"
                                       noWrap
@@ -421,7 +427,15 @@ function App() {
               control={
                 <Checkbox
                   checked={isRepeating}
-                  onChange={(e) => setIsRepeating(e.target.checked)}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setIsRepeating(checked);
+                    if (!checked) {
+                      setRepeatType('none');
+                      setRepeatInterval(1);
+                      setRepeatEndDate('');
+                    }
+                  }}
                 />
               }
               label="반복 일정"
@@ -554,9 +568,6 @@ function App() {
                   <Stack>
                     <Stack direction="row" spacing={1} alignItems="center">
                       {notifiedEvents.includes(event.id) && <Notifications color="error" />}
-                      {event.repeat.type !== 'none' && (
-                        <Autorenew fontSize="small" aria-label="반복 일정 아이콘" />
-                      )}
                       <Typography
                         fontWeight={notifiedEvents.includes(event.id) ? 'bold' : 'normal'}
                         color={notifiedEvents.includes(event.id) ? 'error' : 'inherit'}

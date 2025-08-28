@@ -13,6 +13,7 @@ import {
   getNextWeeklyOccurrence,
   getNextYearlyOccurrence,
   addMonthsUntilHasDay,
+  getNextMonthlyOccurrence,
 } from './helpers';
 import type { Event } from '../../types';
 
