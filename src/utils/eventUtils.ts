@@ -41,7 +41,10 @@ function filterEventsByDateRangeAtMonth(events: Event[], currentDate: Date) {
     59,
     999
   );
-  return filterEventsByDateRange(events, monthStart, monthEnd);
+  const merged = events.flatMap((ev) =>
+    ev.repeat.type === 'none' ? [ev] : generateInstances(ev as Event, monthStart, monthEnd)
+  );
+  return filterEventsByDateRange(merged, monthStart, monthEnd);
 }
 
 export function getFilteredEvents(
