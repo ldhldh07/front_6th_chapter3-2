@@ -1,11 +1,10 @@
 import { getFilteredEvents } from '../../../utils/eventUtils.ts';
+import { expandEventsToNextOccurrences, generateInstances } from '../../../utils/repeat/actions.ts';
 import {
-  expandEventsToNextOccurrences,
   getNextDailyOccurrence,
-} from '../../../utils/repeat/actions.ts';
-import { getNextWeeklyOccurrence } from '../../../utils/repeat/actions.ts';
-import { getNextYearlyOccurrence } from '../../../utils/repeat/actions.ts';
-import { generateInstances } from '../../../utils/repeat/actions.ts';
+  getNextWeeklyOccurrence,
+  getNextYearlyOccurrence,
+} from '../../../utils/repeat/helpers.ts';
 import { makeEvent } from '../../utils.ts';
 
 describe('getNextDailyOccurrence', () => {
