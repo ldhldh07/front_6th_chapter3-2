@@ -101,8 +101,9 @@ function App() {
     editEvent,
   } = useEventForm();
 
-  const { events, saveEvent, deleteEvent } = useEventOperations(Boolean(editingEvent), () =>
-    setEditingEvent(null)
+  const { events, saveEvent, deleteEvent, fetchEvents } = useEventOperations(
+    Boolean(editingEvent),
+    () => setEditingEvent(null)
   );
 
   const { notifications, notifiedEvents, setNotifications } = useNotifications(events);
@@ -132,6 +133,52 @@ function App() {
     if (startTimeError || endTimeError) {
       enqueueSnackbar('시간 설정을 확인해주세요.', { variant: 'error' });
       return;
+    }
+
+    const isInstanceEdit =
+      editingEvent && editingEvent.id.includes('_') && editingEvent.id.match(/_\d{4}-\d{2}-\d{2}$/);
+
+    if (isInstanceEdit && !isRepeating) {
+      const [baseId, dateToExclude] = editingEvent.id.split('_');
+      const baseEvent = events.find((event) => event.id === baseId);
+
+      if (baseEvent && baseEvent.repeat.type !== 'none') {
+        const updatedBaseEvent = {
+          ...baseEvent,
+          repeat: {
+            ...baseEvent.repeat,
+            excludedDates: [...(baseEvent.repeat.excludedDates || []), dateToExclude],
+          },
+        };
+
+        await fetch(`/api/events/${baseId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updatedBaseEvent),
+        });
+
+        const newSingleEvent: EventForm = {
+          title,
+          date,
+          startTime,
+          endTime,
+          description,
+          location,
+          category,
+          repeat: { type: 'none', interval: 0 },
+          notificationTime,
+        };
+
+        await fetch('/api/events', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newSingleEvent),
+        });
+
+        await fetchEvents();
+        resetForm();
+        return;
+      }
     }
 
     const eventData: Event | EventForm = {

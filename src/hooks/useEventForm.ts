@@ -55,7 +55,31 @@ export const useEventForm = (initialEvent?: Event) => {
     setNotificationTime(10);
   };
 
-  const editEvent = (event: Event) => {
+  const editEvent = (event: Event, allEvents?: Event[]) => {
+    const isInstanceId = event.id.includes('_') && event.id.match(/_\d{4}-\d{2}-\d{2}$/);
+
+    if (isInstanceId && allEvents) {
+      const [baseId] = event.id.split('_');
+      const baseEvent = allEvents.find((e) => e.id === baseId);
+
+      if (baseEvent) {
+        setEditingEvent(event);
+        setTitle(baseEvent.title);
+        setDate(event.date);
+        setStartTime(baseEvent.startTime);
+        setEndTime(baseEvent.endTime);
+        setDescription(baseEvent.description);
+        setLocation(baseEvent.location);
+        setCategory(baseEvent.category);
+        setIsRepeating(baseEvent.repeat.type !== 'none');
+        setRepeatType(baseEvent.repeat.type);
+        setRepeatInterval(baseEvent.repeat.interval);
+        setRepeatEndDate(baseEvent.repeat.endDate || '');
+        setNotificationTime(baseEvent.notificationTime);
+        return;
+      }
+    }
+
     setEditingEvent(event);
     setTitle(event.title);
     setDate(event.date);
