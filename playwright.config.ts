@@ -35,26 +35,8 @@ export default defineConfig({
   /* Configure projects for major browsers */
   projects: [
     {
-      name: 'setup:repeat',
-      testMatch: '**/setup/*.ts',
-    },
-
-    {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'], storageState: 'playwright/.auth/repeat.json' },
-      dependencies: ['setup:repeat'],
-    },
-
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'], storageState: 'playwright/.auth/repeat.json' },
-      dependencies: ['setup:repeat'],
-    },
-
-    {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'], storageState: 'playwright/.auth/repeat.json' },
-      dependencies: ['setup:repeat'],
+      use: { ...devices['Desktop Chrome'] },
     },
 
     /* Test against mobile viewports. */
