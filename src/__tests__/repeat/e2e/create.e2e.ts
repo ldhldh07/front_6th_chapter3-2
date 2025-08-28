@@ -33,7 +33,6 @@ test.describe('E2E - 기본 + 반복 아이콘', () => {
 
     await page.getByTestId('event-submit-button').click();
 
-    // 일정 겹침 경고가 뜨는 경우 처리
     const overlapDialog = page.getByRole('dialog', { name: '일정 겹침 경고' });
     if (await overlapDialog.isVisible().catch(() => false)) {
       await overlapDialog.getByRole('button', { name: '계속 진행' }).click();
@@ -41,7 +40,6 @@ test.describe('E2E - 기본 + 반복 아이콘', () => {
 
     await expect(page.getByText('일정이 추가되었습니다.')).toBeVisible();
 
-    // 특정 뷰에 의존하지 않고 전역에서 아이콘 존재만 확인
     await expect(page.getByLabel('반복 일정 아이콘').first()).toBeVisible();
   });
 });
