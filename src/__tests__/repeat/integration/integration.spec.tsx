@@ -38,8 +38,10 @@ describe('반복 UI 및 표시', () => {
     expect(screen.getByLabelText('반복 종료일')).toBeInTheDocument();
   });
 
-  it('반복 일정을 저장하면 리스트에 반복 아이콘(↻)이 표시된다 (Red)', async () => {
+  it('반복 일정을 저장하면 캘린더 셀에 반복 아이콘(↻)이 표시된다', async () => {
     setupMockHandlerCreation();
+
+    vi.setSystemTime(new Date('2025-10-15'));
 
     const { user } = setup(<App />);
 
@@ -63,16 +65,19 @@ describe('반복 UI 및 표시', () => {
 
     await user.click(screen.getByTestId('event-submit-button'));
 
-    const eventList = within(screen.getByTestId('event-list'));
-    expect(eventList.getByLabelText('반복 일정 아이콘')).toBeInTheDocument();
+    await user.click(within(screen.getByLabelText('뷰 타입 선택')).getByRole('combobox'));
+    await user.click(screen.getByRole('option', { name: 'week-option' }));
+    const weekView = within(screen.getByTestId('week-view'));
+    expect(weekView.getAllByLabelText('반복 일정 아이콘').length).toBeGreaterThan(0);
   });
 
   it('반복 일정을 단일 수정으로 저장하면 반복 아이콘이 사라진다', async () => {
     setupMockHandlerUpdating();
 
+    vi.setSystemTime(new Date('2025-10-15'));
+
     const { user } = setup(<App />);
 
-    // 먼저 기존 이벤트를 반복 이벤트로 변경하여 아이콘이 보이도록 만든다
     await user.click((await screen.findAllByLabelText('Edit event'))[0]);
     const repeatToggle = await screen.findByLabelText('반복 일정');
     await user.click(repeatToggle);
@@ -80,16 +85,18 @@ describe('반복 UI 및 표시', () => {
     await user.click(screen.getByRole('option', { name: '매주' }));
     await user.click(screen.getByTestId('event-submit-button'));
 
-    const list = within(screen.getByTestId('event-list'));
-    expect(await list.findByLabelText('반복 일정 아이콘')).toBeInTheDocument();
+    await user.click(within(screen.getByLabelText('뷰 타입 선택')).getByRole('combobox'));
+    await user.click(screen.getByRole('option', { name: 'week-option' }));
+    const weekView = within(screen.getByTestId('week-view'));
+    expect(weekView.getAllByLabelText('반복 일정 아이콘').length).toBeGreaterThan(0);
 
     await user.click((await screen.findAllByLabelText('Edit event'))[0]);
     const repeatToggle2 = await screen.findByLabelText('반복 일정');
-    await user.click(repeatToggle2); // 체크 해제
+    await user.click(repeatToggle2);
     await user.click(screen.getByTestId('event-submit-button'));
 
     await waitFor(() => {
-      expect(list.queryByLabelText('반복 일정 아이콘')).not.toBeInTheDocument();
+      expect(weekView.queryByLabelText('반복 일정 아이콘')).not.toBeInTheDocument();
     });
   });
 });
