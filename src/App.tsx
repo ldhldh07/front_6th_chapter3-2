@@ -36,7 +36,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useSnackbar } from 'notistack';
-import { useState } from 'react';
+import { useState, ChangeEvent } from 'react';
 
 import { useCalendarView } from './hooks/useCalendarView.ts';
 import { useEventForm } from './hooks/useEventForm.ts';
@@ -113,6 +113,15 @@ function App() {
   const [overlappingEvents, setOverlappingEvents] = useState<Event[]>([]);
 
   const { enqueueSnackbar } = useSnackbar();
+  const handleRepeatToggleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const checked = e.target.checked;
+    setIsRepeating(checked);
+    if (!checked) {
+      setRepeatType('none');
+      setRepeatInterval(1);
+      setRepeatEndDate('');
+    }
+  };
 
   const addOrUpdateEvent = async () => {
     if (!title || !date || !startTime || !endTime) {
@@ -424,20 +433,7 @@ function App() {
 
           <FormControl>
             <FormControlLabel
-              control={
-                <Checkbox
-                  checked={isRepeating}
-                  onChange={(e) => {
-                    const checked = e.target.checked;
-                    setIsRepeating(checked);
-                    if (!checked) {
-                      setRepeatType('none');
-                      setRepeatInterval(1);
-                      setRepeatEndDate('');
-                    }
-                  }}
-                />
-              }
+              control={<Checkbox checked={isRepeating} onChange={handleRepeatToggleChange} />}
               label="반복 일정"
             />
           </FormControl>
