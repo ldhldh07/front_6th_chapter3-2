@@ -1,3 +1,4 @@
+import { getFilteredEvents } from '../../utils/eventUtils.ts';
 import { expandEventsToNextOccurrences, getNextDailyOccurrence } from '../../utils/repeatUtils.ts';
 import { getNextWeeklyOccurrence } from '../../utils/repeatUtils.ts';
 import { getNextYearlyOccurrence } from '../../utils/repeatUtils.ts';
@@ -184,5 +185,39 @@ describe('generateInstances - cap', () => {
 
     const instances = generateInstances(base, rangeStart, rangeEnd);
     expect(instances.map((e) => e.date)).toEqual(['2025-10-29', '2025-10-30']);
+  });
+});
+
+describe('getFilteredEvents - month view recurrence (RED)', () => {
+  it('월별 뷰에서 monthly 31일 시작 일정은 2월을 건너뛰고 3월 31일만 포함되어야 한다', () => {
+    const events = [
+      makeEvent({
+        id: 'm1',
+        title: 'Monthly-31',
+        date: '2025-01-31',
+        repeat: { type: 'monthly', interval: 1, endDate: '2025-03-31' },
+      }),
+    ];
+
+    const currentDate = new Date('2025-03-15T00:00:00Z');
+    const result = getFilteredEvents(events, '', currentDate, 'month');
+
+    expect(result.map((e) => e.date)).toEqual(['2025-03-31']);
+  });
+
+  it('월별 뷰에서 yearly 2/29 시작 일정은 윤년(글로벌 상한 내)에서만 포함되어야 한다', () => {
+    const events = [
+      makeEvent({
+        id: 'y229',
+        title: 'Yearly-229',
+        date: '2024-02-29',
+        repeat: { type: 'yearly', interval: 1, endDate: '2028-12-31' },
+      }),
+    ];
+
+    const currentDate = new Date('2024-02-01T00:00:00Z');
+    const result = getFilteredEvents(events, '', currentDate, 'month');
+
+    expect(result.map((e) => e.date)).toEqual(['2024-02-29']);
   });
 });
